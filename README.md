@@ -1,4 +1,4 @@
 # MMUncertainty
-Official code for our paper: "MMUncertainty: Detecting Hallucination in Any Multi-modal LLM".
+Official code for our paper: "VL-Uncertainty: Detecting Hallucination in Large Vision-Language Model via Uncertainty Estimation".
 
 Code will be released soon!
