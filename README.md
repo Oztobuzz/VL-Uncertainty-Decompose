@@ -1,6 +1,6 @@
-<h1 style="text-align: center;">
-    <img src=".asset/img/logo.png" alt="Logo" style="vertical-align: middle; height: 200px;">
-</h1>
+<p align="center">
+    <img src=".asset/img/logo.png" width="25%"> <br>
+</p>
 
 # 🔎 VL-Uncertainty
 
