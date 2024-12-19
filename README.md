@@ -4,7 +4,7 @@
 
 # 🔎 VL-Uncertainty
 
-[Ruiyang Zhang](https://ruiyang-061x.github.io/), [Hu Zhang](https://huzhangcs.github.io/), [Zehdong Zheng*](https://www.zdzheng.xyz/)
+[Ruiyang Zhang](https://ruiyang-061x.github.io/), [Hu Zhang](https://huzhangcs.github.io/), [Zhedong Zheng*](https://www.zdzheng.xyz/)
 
 **[Website](https://vl-uncertainty.github.io/)** | **[Paper](https://arxiv.org/abs/2411.11919)** | **[Code](https://github.com/Ruiyang-061X/VL-Uncertainty)**
 
