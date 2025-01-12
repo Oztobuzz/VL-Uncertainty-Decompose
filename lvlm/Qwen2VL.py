@@ -45,7 +45,7 @@ class Qwen2VL:
             videos=video_inputs,
             padding=True,
             return_tensors="pt",
-        ).to(0)
+        ).to(2)
         generated_ids = self.model.generate(
             **inputs,
             max_new_tokens=32,
