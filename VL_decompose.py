@@ -10,6 +10,7 @@ from llm.Qwen import Qwen
 from util.visual_perturbation import *
 from util.textual_perturbation import *
 from util.misc import *
+from util.visual_description import *
 import torch
 import argparse
 import re
@@ -320,9 +321,9 @@ def semantic_entropy(args, lvlm, sample, llm, log_dict):
 
 def handle_single(args, idx, lvlm, benchmark, llm, log_dict):
     sample = obtain_single_sample(args, benchmark, idx, log_dict)
-    if(idx == 0):
-        sample['question'] =  'A handwritten mathematical equation: (x + 3)² = 4, written in green. ' + sample['question']
-        print(sample)
+    # if(args.language_only == True):
+    #     sample['question'] =  'A handwritten mathematical equation: (x + 3)² = 4, written in green. ' + sample['question']
+    #     print(sample)
     if sample is None or sample['img'] is None or sample['question'] is None or sample['gt_ans'] is None:
         log_dict[idx]['flag_sample_valid'] = False
         return
@@ -360,7 +361,7 @@ def handle_batch(args, lvlm, benchmark, llm):
     log_dict['end_time_str'] = end_time_str
     if not os.path.exists('exp'):
         os.makedirs('exp')
-    with open(f'exp/log_{begin_time_str}.json', "w", encoding='utf-8') as f: 
+    with open(f'exp_decompose/log_{begin_time_str}.json', "w", encoding='utf-8') as f: 
         json.dump(log_dict, f, ensure_ascii=False, indent=4)
     print(f"- Full log is saved at exp/log_dict_{begin_time_str}.json.")
 
