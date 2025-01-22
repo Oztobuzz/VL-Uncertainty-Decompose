@@ -320,6 +320,9 @@ def semantic_entropy(args, lvlm, sample, llm, log_dict):
 
 def handle_single(args, idx, lvlm, benchmark, llm, log_dict):
     sample = obtain_single_sample(args, benchmark, idx, log_dict)
+    if(idx == 0):
+        sample['question'] =  'A handwritten mathematical equation: (x + 3)² = 4, written in green. ' + sample['question']
+        print(sample)
     if sample is None or sample['img'] is None or sample['question'] is None or sample['gt_ans'] is None:
         log_dict[idx]['flag_sample_valid'] = False
         return
