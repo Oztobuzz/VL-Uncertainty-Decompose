@@ -328,7 +328,9 @@ def handle_batch(args, lvlm, benchmark, llm):
     total = 0
     cnt_correct_detection = 0
     benchmark_size = benchmark.obtain_size()
+    print(f'- Benchmark size: {benchmark_size}.')
     benchmark_size = args.benchmark_size if args.benchmark_size < benchmark_size else benchmark_size
+    print(f'- Test size: {benchmark_size}.')
     for idx in tqdm(range(benchmark_size)):
         log_dict[idx] = {}
         handle_single(args, idx, lvlm, benchmark, llm, log_dict)
@@ -344,8 +346,8 @@ def handle_batch(args, lvlm, benchmark, llm):
     log_dict['end_time_str'] = end_time_str
     if not os.path.exists('exp'):
         os.makedirs('exp')
-    with open(f'exp/log_{begin_time_str}.json', "w") as f: 
-        json.dump(log_dict, f)
+    with open(f'exp/log_{begin_time_str}.json', "w", encoding='utf-8') as f: 
+        json.dump(log_dict, f, ensure_ascii=False, indent=4)
     print(f"- Full log is saved at exp/log_dict_{begin_time_str}.json.")
 
 def fix_seed(seed=0):
