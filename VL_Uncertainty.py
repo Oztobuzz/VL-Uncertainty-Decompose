@@ -73,6 +73,7 @@ def parse_args():
     parser.add_argument('--inference_temp', type=float, default=0.1)
     parser.add_argument('--sampling_temp', type=float, default=1.0)
     parser.add_argument('--sampling_time', type=int, default=5)
+    parser.add_argument('--benchmark_size', type=int, default= 2)
     args = parser.parse_args()
     return args
 
@@ -94,7 +95,7 @@ def obtain_llm(args):
         raise ValueError(f"Unsupported LLM: {args.llm}")
     return llm_class(args.llm)
 
-def obatin_single_sample(args, benchmark, idx, log_dict):
+def obtain_single_sample(args, benchmark, idx, log_dict):
     sample = benchmark.retrieve(idx)
     log_dict[idx]['question'] = sample['question']
     log_dict[idx]['gt_ans'] = sample['gt_ans']
@@ -169,10 +170,10 @@ def perturbation_of_visual_prompt(args, sample):
             perturbed_img_list.append(image_flipping(image_cropping(sample['img'], degree), 'horizontal'))
     elif args.visual_perturbation == 'rotate_blur':
         for degree in [-40, -20, 20, 40, 10]:
-            perturbed_img_list.append(blur_image(image_rotation(sample['img'], degree), 1))
+            perturbed_img_list.append(image_blurring(image_rotation(sample['img'], degree), 1))
     elif args.visual_perturbation == 'crop_blur':
         for degree in [0.95, 0.9, 0.85, 0.8, 0.75]:
-            perturbed_img_list.append(blur_image(image_cropping(sample['img'], degree), 1))
+            perturbed_img_list.append(image_blurring(image_cropping(sample['img'], degree), 1))
     return perturbed_img_list
 
 def perturbation_of_textual_prompt(args, sample, llm):
@@ -292,16 +293,22 @@ def vl_uncertainty(args, lvlm, sample, llm, log_dict):
     uncertainty_estimation(args, sample, llm, log_dict)
     hallucination_detection(args, sample, log_dict)
 
+# Semantic_entropy got the perturbed prompt
 def semantic_entropy(args, lvlm, sample, llm, log_dict):
+    perturbed_img_list = perturbation_of_visual_prompt(args, sample)
+    perturbed_question_list = perturbation_of_textual_prompt(args, sample, llm)
+    log_dict[sample['idx']]['perturbed_question_list'] = perturbed_question_list
+    perturbed_prompt_list = combination_of_perturbed_prompt(args, sample, perturbed_img_list, perturbed_question_list, log_dict)
+    # print(perturbed_prompt_list)
     log_dict[sample['idx']]['ans_sampling_list'] = []
     for _ in range(args.sampling_time):
-        infer_single_sample(args, lvlm, sample, True, llm, log_dict)
+        infer_single_sample(args, lvlm, perturbed_prompt_list[0], True, llm, log_dict)
     
     uncertainty_estimation(args, sample, llm, log_dict)
     hallucination_detection(args, sample, log_dict)
 
 def handle_single(args, idx, lvlm, benchmark, llm, log_dict):
-    sample = obatin_single_sample(args, benchmark, idx, log_dict)
+    sample = obtain_single_sample(args, benchmark, idx, log_dict)
     if sample is None or sample['img'] is None or sample['question'] is None or sample['gt_ans'] is None:
         log_dict[idx]['flag_sample_valid'] = False
         return
@@ -321,7 +328,7 @@ def handle_batch(args, lvlm, benchmark, llm):
     total = 0
     cnt_correct_detection = 0
     benchmark_size = benchmark.obtain_size()
-    benchmark_size = 2
+    benchmark_size = args.benchmark_size if args.benchmark_size < benchmark_size else benchmark_size
     for idx in tqdm(range(benchmark_size)):
         log_dict[idx] = {}
         handle_single(args, idx, lvlm, benchmark, llm, log_dict)

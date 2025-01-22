@@ -1,9 +1,9 @@
+import os 
 import torch
 from transformers import Qwen2VLForConditionalGeneration, AutoProcessor
 from qwen_vl_utils import process_vision_info
 import warnings
 warnings.filterwarnings("ignore")
-
 
 class Qwen2VL:
 
@@ -39,13 +39,14 @@ class Qwen2VL:
                     ]
         text = self.processor.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
         image_inputs, video_inputs = process_vision_info(messages)
+        # print(os.environ["CUDA_VISIBLE_DEVICES"])
         inputs = self.processor(
             text=[text],
             images=image_inputs,
             videos=video_inputs,
             padding=True,
             return_tensors="pt",
-        ).to(2)
+        ).to(0)
         generated_ids = self.model.generate(
             **inputs,
             max_new_tokens=32,
