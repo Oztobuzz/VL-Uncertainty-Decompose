@@ -38,7 +38,10 @@ class Qwen2VL:
                         }
                     ]
         text = self.processor.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
-        image_inputs, video_inputs = process_vision_info(messages)
+        if(image is not None):
+            image_inputs, video_inputs = process_vision_info(messages)
+        else: 
+            image_inputs, video_inputs = None, None
         # print(os.environ["CUDA_VISIBLE_DEVICES"])
         inputs = self.processor(
             text=[text],

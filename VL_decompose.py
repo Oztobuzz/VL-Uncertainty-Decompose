@@ -74,6 +74,7 @@ def parse_args():
     parser.add_argument('--sampling_temp', type=float, default=1.0)
     parser.add_argument('--sampling_time', type=int, default=5)
     parser.add_argument('--benchmark_size', type=int, default= 2)
+    parser.add_argument('--language_only', type=bool, default= False)
     args = parser.parse_args()
     return args
 
@@ -102,11 +103,20 @@ def obtain_single_sample(args, benchmark, idx, log_dict):
     return sample
 
 def infer_single_sample(args, lvlm, sample, is_sampling, llm, log_dict):
-    ans = lvlm.generate(
-        sample['img'],
-        sample['question'],
-        args.inference_temp if not is_sampling else args.sampling_temp
-    )
+    # print(log_dict)
+    # print(sample)
+    if(args.language_only == True):
+        ans = lvlm.generate(
+            None,
+            sample['question'],
+            args.inference_temp if not is_sampling else args.sampling_temp
+        )
+    else: 
+        ans = lvlm.generate(
+            sample['img'],
+            sample['question'],
+            args.inference_temp if not is_sampling else args.sampling_temp
+        )
     if not is_sampling:
         log_dict[sample['idx']]['ans'] = ans
         flag_ans_correct = True
@@ -114,6 +124,7 @@ def infer_single_sample(args, lvlm, sample, is_sampling, llm, log_dict):
             flag_ans_correct = str(sample['gt_ans']) in ans
         else:
             question = f"Ground truth: {sample['gt_ans']}. Model answer: {ans}. Please verify if the model ans matches the ground truth. Respond with either 'Correct' or 'Wrong' only."
+            
             llm_ans_check = llm.generate(
                 question,
                 0.1
