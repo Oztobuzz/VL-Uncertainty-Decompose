@@ -10,6 +10,7 @@ from llm.Qwen import Qwen
 from util.visual_perturbation import *
 from util.textual_perturbation import *
 from util.misc import *
+
 from util.visual_description import *
 import torch
 import argparse
@@ -75,7 +76,7 @@ def parse_args():
     parser.add_argument('--sampling_temp', type=float, default=1.0)
     parser.add_argument('--sampling_time', type=int, default=5)
     parser.add_argument('--benchmark_size', type=int, default= 2)
-    parser.add_argument('--language_only', type=bool, default= False)
+    parser.add_argument('--language_only', action='store_true', default= False)
     args = parser.parse_args()
     return args
 
@@ -321,9 +322,9 @@ def semantic_entropy(args, lvlm, sample, llm, log_dict):
 
 def handle_single(args, idx, lvlm, benchmark, llm, log_dict):
     sample = obtain_single_sample(args, benchmark, idx, log_dict)
-    # if(args.language_only == True):
-    #     sample['question'] =  'A handwritten mathematical equation: (x + 3)² = 4, written in green. ' + sample['question']
-    #     print(sample)
+    if(args.language_only == True):
+        sample['question'] = create_visual_description(sample)  + sample['question']
+        print(sample)
     if sample is None or sample['img'] is None or sample['question'] is None or sample['gt_ans'] is None:
         log_dict[idx]['flag_sample_valid'] = False
         return
