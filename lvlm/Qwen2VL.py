@@ -19,7 +19,9 @@ class Qwen2VL:
                         attn_implementation="flash_attention_2",
                         device_map="auto",
                     )
-        self.processor = AutoProcessor.from_pretrained(model_name)
+        min_pixels = 128 * 28 * 28
+        max_pixels = 640 * 28 * 28
+        self.processor = AutoProcessor.from_pretrained(model_name, min_pixels=min_pixels, max_pixels=max_pixels)
 
     def generate(self, image, question, temp):
         messages = [
@@ -43,6 +45,8 @@ class Qwen2VL:
         else: 
             image_inputs, video_inputs = None, None
         # print(os.environ["CUDA_VISIBLE_DEVICES"])
+        # device = torch.device(f'cuda:{eval(os.environ["CUDA_VISIBLE_DEVICES"])}')
+        # print(device)
         inputs = self.processor(
             text=[text],
             images=image_inputs,

@@ -108,9 +108,12 @@ def infer_single_sample(args, lvlm, sample, is_sampling, llm, log_dict):
     # print(log_dict)
     # print(sample)
     if(args.language_only == True):
+        # prompt = sample['description'] + "Base" + sample['question']
+        prompt = f'{sample["description"]} Based on the description, {sample["question"]}'
+        # print(prompt)
         ans = lvlm.generate(
             None,
-            sample['question'],
+            sample['description'] + sample['question'],
             args.inference_temp if not is_sampling else args.sampling_temp
         )
     else: 
@@ -192,9 +195,11 @@ def perturbation_of_visual_prompt(args, sample):
 def perturbation_of_textual_prompt(args, sample, llm):
     perturbed_question_list = []
     original_question = parse_original_question(sample['question'])
+    # print(f'Original_question:', original_question)
     if args.textual_perturbation == 'llm_rephrasing':
         for temp in args.textual_perturbation_temp_list:
             instruction = args.textual_perturbation_instruction_template.replace("{question}", original_question)
+            # print(instruction)
             perturbed_question = llm.generate(instruction, temp)
             perturbed_question_list.append(merge_question(perturbed_question, sample['question']))
     if args.textual_perturbation == 'swapping':
@@ -294,8 +299,12 @@ def hallucination_detection(args, sample, log_dict):
     log_dict[sample['idx']]['flag_detection_correct'] = flag_detection_correct
 
 def vl_uncertainty(args, lvlm, sample, llm, log_dict):
+    print(sample)
     perturbed_img_list = perturbation_of_visual_prompt(args, sample)
     perturbed_question_list = perturbation_of_textual_prompt(args, sample, llm)
+    if(sample.get('description') is not None):
+        log_dict[sample['idx']]['image_description'] = sample['description']
+    else: log_dict[sample['idx']]['image_description'] = "None"     
     log_dict[sample['idx']]['perturbed_question_list'] = perturbed_question_list
     perturbed_prompt_list = combination_of_perturbed_prompt(args, sample, perturbed_img_list, perturbed_question_list, log_dict)
     
@@ -323,8 +332,9 @@ def semantic_entropy(args, lvlm, sample, llm, log_dict):
 def handle_single(args, idx, lvlm, benchmark, llm, log_dict):
     sample = obtain_single_sample(args, benchmark, idx, log_dict)
     if(args.language_only == True):
-        sample['question'] = create_visual_description(sample)  + sample['question']
-        print(sample)
+        # sample['question'] = create_visual_description(sample)  + sample['question']
+        sample['description'] = create_visual_description(sample)
+        # print(sample)
     if sample is None or sample['img'] is None or sample['question'] is None or sample['gt_ans'] is None:
         log_dict[idx]['flag_sample_valid'] = False
         return
@@ -348,6 +358,8 @@ def handle_batch(args, lvlm, benchmark, llm):
     benchmark_size = args.benchmark_size if args.benchmark_size < benchmark_size else benchmark_size
     print(f'- Test size: {benchmark_size}.')
     for idx in tqdm(range(benchmark_size)):
+    # Samle 8/20 out of memory
+    # for idx in tqdm([76,77,78]):
         log_dict[idx] = {}
         handle_single(args, idx, lvlm, benchmark, llm, log_dict)
         if not log_dict[idx]['flag_sample_valid']:
@@ -360,6 +372,7 @@ def handle_batch(args, lvlm, benchmark, llm):
     log_dict['Total samples'] = total
     end_time_str = get_cur_time()
     log_dict['end_time_str'] = end_time_str
+    
     if not os.path.exists('exp'):
         os.makedirs('exp')
     with open(f'exp_decompose/log_{begin_time_str}.json', "w", encoding='utf-8') as f: 
