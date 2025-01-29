@@ -89,6 +89,11 @@ bash run/run_MMMU.sh;
 bash run/run_ScienceQA.sh;
 ```
 
+- For generating image's descriptions (Gemini model)
+```
+bash run/generate_description.sh
+```
+
 ## 🏄 Examples
 
 - VL-Uncertainty successfully detects LVLM hallucination:

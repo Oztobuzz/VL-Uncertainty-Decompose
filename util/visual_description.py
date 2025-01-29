@@ -1,5 +1,7 @@
 import os
+import json
 import tempfile
+import time
 from dotenv import load_dotenv
 from google import genai
 from google.genai import types
@@ -8,6 +10,15 @@ load_dotenv()
 api_key = os.environ.get('GEMINI_API_KEY')
 client = genai.Client(api_key=api_key)
 
+def load_prompt_template():
+    with open(f'util/prompt_templates.json') as f:
+        prompt_template = json.load(f)
+        prompt_templates = prompt_template['prompts']
+    return prompt_templates
+
+def get_prompt_template(prompt_templates, order):
+    return prompt_templates[order]["prompt"]
+  
 # Create a temporary file
 def create_temp_file(image):
     with tempfile.NamedTemporaryFile(suffix=".png", delete= False) as temp_file:
@@ -17,34 +28,42 @@ def create_temp_file(image):
     return temp_file_path
 
 
-def create_description_from_image(question: str,image)->str:
+def create_description_from_image(question: str,image, answer , prompt_template: str)->str:
     image_path = create_temp_file(image)
-    # print(image_path)
     file = client.files.upload(path=image_path)
-    # prompt1 = f"""Describe the image in detail for a blind student taking the SAT. The question related to this image is: '''{question}'''. Focus your description on the visual elements that are most important for understanding and answering this question. Do not provide the answer to the question, only a clear and objective description of the image."""
-    prompt2 = "Describe the image in this SAT question for a blind student, focusing only on the visual information needed to answer the question. Be brief and do not give away the answer. SAT Question: " + question
-    response = client.models.generate_content(
-        model="gemini-2.0-flash-exp", contents=[prompt2, file],
-        config=types.GenerateContentConfig(
-        temperature=0,
-        top_p=0.95,
-        candidate_count=5,
-        seed=5,
-        max_output_tokens= 100,
-        stop_sequences=["STOP!"],
-        presence_penalty=0.0,
-        frequency_penalty=0.0,
-    ),
-    )
+    modified_prompt = prompt_template.replace("[question_query]", question)
+    modified_prompt = prompt_template.replace("[answer]", question)
+    
+    while(True):
+        try: 
+            response = client.models.generate_content(
+                model="gemini-2.0-flash-exp", contents=[modified_prompt, file],
+                config=types.GenerateContentConfig(
+                temperature=0,
+                top_p=0.0,
+                candidate_count=1,
+                seed=5,
+                max_output_tokens= 500,
+                stop_sequences=["STOP!"],
+                presence_penalty=0.0,
+                frequency_penalty=0.0,
+            ),
+            )
+        except Exception as e:
+            print(e)
+            time.sleep(5)
+            continue
+        break
     # Delete the temporary file
     os.remove(image_path)
     return response.text
 
 
-def create_visual_description(sample):
+def create_visual_description(sample, prompt: str):
     image = sample['img']
     question = sample['question']
-    return create_description_from_image(question,image)
+    answer = sample['gt_ans']
+    return create_description_from_image(question,image, answer, prompt)
     
 
-
+# print(get_prompt_template(load_prompt_template()))  

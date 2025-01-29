@@ -1,0 +1,35 @@
+{
+  "prompts": [
+    {
+      "order": 0,
+      "name": "Simple and Direct Prompt",
+      "prompt": "Describe the image in this SAT question for a blind student so they can understand it well enough to answer the question: ```[question_query]```. Focus only on the visual information relevant to answering this question. Be concise and informative. Do not provide the answer to the question."
+    },
+    {
+      "order": 1,
+      "name": "More Structured and Detailed Prompt",
+      "prompt": "You are an AI assistant helping a sighted person describe an image in an SAT question for their blind friend. Your goal is to provide a short but informative description that allows the blind friend to understand the image well enough to answer the SAT question, without giving away the answer itself.\n\nHere's the SAT question: ```[question_query]```.\n\nPlease describe the image, focusing on:\n* Type of image: (e.g., graph, chart, diagram, photograph, illustration)\n* Subject matter: Briefly what is being depicted or represented.\n* Key visual elements:  Describe the important parts of the image that are relevant to understanding the question.  Use descriptive language that a blind person can understand (e.g., \"lines going up,\" \"two circles connected by a line,\" \"people standing in a group\").\n* Relationship to the question: Explain how the image visually relates to what the question is asking.\n\nKeep the description concise to save time, but ensure it is informative enough.  Do NOT give the answer to the SAT question. "
+    },
+    {
+      "order": 2,
+      "name": "Emphasizing Brevity Prompt",
+      "prompt": "Describe the image for this SAT question for a blind student.  Be extremely brief and only describe the *essential* visual information needed to answer this question: ```[question_query]```. Think carefully before give description. What is the *minimum* visual information they need to understand from the image to answer the question?  Do not explain the answer."
+    },
+    {
+      "order": 3,
+      "name": "Short and Focused Prompt",
+      "prompt": "Describe the image in this SAT question for a blind student, focusing only on the visual information needed to answer the question. Be brief and do not give away the answer. SAT Question: ```[question_query]```."
+    },
+    {
+      "order": 4,
+      "name": "Answer-Focused Structured Prompt",
+      "prompt": "Given the following SAT question: ```[question_query]``` and the correct answer: ```[answer]```, generate a concise yet informative description of the related image that:\n\nBriefly identifies the type of visual (e.g., graph, diagram, table, chart).\nHighlights only the key visual details necessary to analyze and answer the question.\nUses clear, directional language (e.g., top, bottom, left, right) for spatial reference.\nMentions essential numbers, labels, or data points without unnecessary details.\nKeeps the description within 3-4 sentences to ensure efficiency.\nDoes not reveal or imply the correct answer."
+    },
+    {
+      "order": 5,
+      "name": "Focused description from Claude",
+      "prompt": "Using this SAT question: ```[question_query]``` and knowing the correct answer is [answer], please provide a focused description of the image that:\nHighlights only the specific visual elements a student would need to find this answer\nUses clear, directional language (top, bottom, left, right)\nMentions any crucial numbers, labels, or data points\nKeeps the description under 3-4 sentences\nAvoids directly suggesting the answer\nDescribes the format/type of visual (graph, diagram, etc.) at the start"
+    }
+    
+  ]
+}
