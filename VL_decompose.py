@@ -59,6 +59,13 @@ BENCHMARK_TYPE = {
     'ScienceQA': 'MULTI_CHOICE'
 }
 
+DESCRIPTION_MAP = {
+    'MMVet': "image_descriptions/MMVet_2025_01_29_prompt4.json",
+    'LLaVABench': "create_visual_description_LLaVABench",
+    'MMMU': "create_visual_description_MMMU",
+    'ScienceQA': "create_visual_description_ScienceQA"
+}
+
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--lvlm', type=str, default='Qwen2-VL-2B-Instruct')
@@ -77,6 +84,7 @@ def parse_args():
     parser.add_argument('--sampling_time', type=int, default=5)
     parser.add_argument('--benchmark_size', type=int, default= 2)
     parser.add_argument('--language_only', action='store_true', default= False)
+    parser.add_argument('--language_support', action='store_true', default= False)
     args = parser.parse_args()
     return args
 
@@ -104,16 +112,29 @@ def obtain_single_sample(args, benchmark, idx, log_dict):
     log_dict[idx]['gt_ans'] = sample['gt_ans']
     return sample
 
+def get_description_from_file(benchmark, idx) -> str:
+    with open(DESCRIPTION_MAP[benchmark]) as f:
+        description = json.load(f)
+    # print(description)
+    return description[f'{idx}']['image_description']
+
 def infer_single_sample(args, lvlm, sample, is_sampling, llm, log_dict):
     # print(log_dict)
     # print(sample)
     if(args.language_only == True):
         # prompt = sample['description'] + "Base" + sample['question']
-        prompt = f'{sample["description"]} Based on the description, {sample["question"]}'
+        prompt = f'{sample["image_description"]} Based on the description, {sample["question"]}'
         # print(prompt)
         ans = lvlm.generate(
             None,
-            sample['description'] + sample['question'],
+            prompt,
+            args.inference_temp if not is_sampling else args.sampling_temp
+        )
+    elif(args.language_support == True):
+        prompt = f'{sample["image_description"]} Based on the description and the image, {sample["question"]}'
+        ans = lvlm.generate(
+            sample['img'],
+            prompt,
             args.inference_temp if not is_sampling else args.sampling_temp
         )
     else: 
@@ -299,11 +320,11 @@ def hallucination_detection(args, sample, log_dict):
     log_dict[sample['idx']]['flag_detection_correct'] = flag_detection_correct
 
 def vl_uncertainty(args, lvlm, sample, llm, log_dict):
-    print(sample)
+    # print(sample)
     perturbed_img_list = perturbation_of_visual_prompt(args, sample)
     perturbed_question_list = perturbation_of_textual_prompt(args, sample, llm)
-    if(sample.get('description') is not None):
-        log_dict[sample['idx']]['image_description'] = sample['description']
+    if(sample.get('image_description') is not None):
+        log_dict[sample['idx']]['image_description'] = sample['image_description']
     else: log_dict[sample['idx']]['image_description'] = "None"     
     log_dict[sample['idx']]['perturbed_question_list'] = perturbed_question_list
     perturbed_prompt_list = combination_of_perturbed_prompt(args, sample, perturbed_img_list, perturbed_question_list, log_dict)
@@ -331,9 +352,10 @@ def semantic_entropy(args, lvlm, sample, llm, log_dict):
 
 def handle_single(args, idx, lvlm, benchmark, llm, log_dict):
     sample = obtain_single_sample(args, benchmark, idx, log_dict)
-    if(args.language_only == True):
+    if(args.language_only == True or args.language_support == True):    
         # sample['question'] = create_visual_description(sample)  + sample['question']
-        sample['description'] = create_visual_description(sample)
+        
+        sample['image_description'] = get_description_from_file(args.benchmark, idx)
         # print(sample)
     if sample is None or sample['img'] is None or sample['question'] is None or sample['gt_ans'] is None:
         log_dict[idx]['flag_sample_valid'] = False
@@ -367,17 +389,22 @@ def handle_batch(args, lvlm, benchmark, llm):
         if log_dict[idx]['flag_detection_correct']:
             cnt_correct_detection += 1
         total += 1
-
+        if total % 10 == 0:
+            save_log(log_dict, args, begin_time_str)
+    
     log_dict['Hallucination detection accuracy'] = (cnt_correct_detection / total) * 100
     log_dict['Total samples'] = total
     end_time_str = get_cur_time()
     log_dict['end_time_str'] = end_time_str
-    
+    save_log(log_dict, args, begin_time_str)
+
+
+def save_log(log_dict, args, begin_time_str):    
     if not os.path.exists('exp'):
         os.makedirs('exp')
-    with open(f'exp_decompose/log_{begin_time_str}.json', "w", encoding='utf-8') as f: 
+    with open(f'exp_decompose/log_{begin_time_str}_language_only_{args.language_only}_language_support_{args.language_support}.json', "w", encoding='utf-8') as f: 
         json.dump(log_dict, f, ensure_ascii=False, indent=4)
-    print(f"- Full log is saved at exp/log_dict_{begin_time_str}.json.")
+    print(f"- Full log is saved at exp_decompose/log_{begin_time_str}_language_only_{args.language_only}_language_support_{args.language_support}.json.")
 
 def fix_seed(seed=0):
     random.seed(seed)

@@ -9,3 +9,4 @@ def parse_original_question(question):
 
 def merge_question(question_new, question):
     return question_new + '\n' + '\n'.join(question.split('\n')[1:])
+
