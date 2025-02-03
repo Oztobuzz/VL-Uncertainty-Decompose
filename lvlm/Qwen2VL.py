@@ -44,9 +44,6 @@ class Qwen2VL:
             image_inputs, video_inputs = process_vision_info(messages)
         else: 
             image_inputs, video_inputs = None, None
-        # print(os.environ["CUDA_VISIBLE_DEVICES"])
-        # device = torch.device(f'cuda:{eval(os.environ["CUDA_VISIBLE_DEVICES"])}')
-        # print(device)
         inputs = self.processor(
             text=[text],
             images=image_inputs,

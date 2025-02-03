@@ -123,7 +123,7 @@ def infer_single_sample(args, lvlm, sample, is_sampling, llm, log_dict):
     # print(sample)
     if(args.language_only == True):
         # prompt = sample['description'] + "Base" + sample['question']
-        prompt = f'{sample["image_description"]} Based on the description, {sample["question"]}'
+        prompt = f'{sample["image_description"]} Based on the description, {sample["question"]} If you cannot answer based on the description. Just output "I cannot answer that"'
         # print(prompt)
         ans = lvlm.generate(
             None,
