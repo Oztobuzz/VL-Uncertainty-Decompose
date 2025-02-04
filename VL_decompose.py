@@ -123,7 +123,8 @@ def infer_single_sample(args, lvlm, sample, is_sampling, llm, log_dict):
     # print(sample)
     if(args.language_only == True):
         # prompt = sample['description'] + "Base" + sample['question']
-        prompt = f'{sample["image_description"]} Based on the description, {sample["question"]} If you cannot answer based on the description. Just output "I cannot answer that"'
+        # prompt = f'{sample["image_description"]} Based on the description, {sample["question"]} If you cannot answer based on the description. Just output "I cannot answer that"'
+        prompt = f'{sample["image_description"]} \nBased on the description, {sample["question"]}.' 
         # print(prompt)
         ans = lvlm.generate(
             None,
@@ -131,7 +132,7 @@ def infer_single_sample(args, lvlm, sample, is_sampling, llm, log_dict):
             args.inference_temp if not is_sampling else args.sampling_temp
         )
     elif(args.language_support == True):
-        prompt = f'{sample["image_description"]} Based on the description and the image, {sample["question"]}'
+        prompt = f'{sample["image_description"]}\nBased on the description and the image, {sample["question"]}'  
         ans = lvlm.generate(
             sample['img'],
             prompt,
@@ -217,6 +218,9 @@ def perturbation_of_textual_prompt(args, sample, llm):
     perturbed_question_list = []
     original_question = parse_original_question(sample['question'])
     # print(f'Original_question:', original_question)
+    if args.textual_perturbation == 'normal':
+        for _ in range(args.sampling_time):
+            perturbed_question_list.append(sample['question'])
     if args.textual_perturbation == 'llm_rephrasing':
         for temp in args.textual_perturbation_temp_list:
             instruction = args.textual_perturbation_instruction_template.replace("{question}", original_question)
