@@ -83,6 +83,7 @@ def parse_args():
     parser.add_argument('--sampling_temp', type=float, default=1.0)
     parser.add_argument('--sampling_time', type=int, default=5)
     parser.add_argument('--benchmark_size', type=int, default= 2)
+    parser.add_argument('--prompt_only', action='store_true', default= False)
     parser.add_argument('--language_only', action='store_true', default= False)
     parser.add_argument('--language_support', action='store_true', default= False)
     args = parser.parse_args()
@@ -121,7 +122,14 @@ def get_description_from_file(benchmark, idx) -> str:
 def infer_single_sample(args, lvlm, sample, is_sampling, llm, log_dict):
     # print(log_dict)
     # print(sample)
-    if(args.language_only == True):
+    if(args.prompt_only == True):
+        prompt = sample['question']
+        ans = lvlm.generate(
+            None,
+            prompt,
+            args.inference_temp if not is_sampling else args.sampling_temp
+        )
+    elif(args.language_only == True):
         # prompt = sample['description'] + "Base" + sample['question']
         # prompt = f'{sample["image_description"]} Based on the description, {sample["question"]} If you cannot answer based on the description. Just output "I cannot answer that"'
         prompt = f'{sample["image_description"]} \nBased on the description, {sample["question"]}.' 
@@ -406,9 +414,17 @@ def handle_batch(args, lvlm, benchmark, llm):
 def save_log(log_dict, args, begin_time_str):    
     if not os.path.exists('exp'):
         os.makedirs('exp')
-    with open(f'exp_decompose/log_{begin_time_str}_language_only_{args.language_only}_language_support_{args.language_support}.json', "w", encoding='utf-8') as f: 
+    option = f''
+    if(args.prompt_only == True):
+        option = 'prompt_only'
+    elif(args.language_only == True):  
+        option = 'language_only'
+    elif(args.language_support == True):  
+        option = 'language_support'
+    else: option = 'original'
+    with open(f'exp_decompose/log_id{begin_time_str}_{option}_temp_{args.sampling_temp}.json', "w", encoding='utf-8') as f: 
         json.dump(log_dict, f, ensure_ascii=False, indent=4)
-    print(f"- Full log is saved at exp_decompose/log_{begin_time_str}_language_only_{args.language_only}_language_support_{args.language_support}.json.")
+    print(f"- Full log is saved at exp_decompose/log_id{begin_time_str}_{option}_temp_{args.sampling_temp}.json")
 
 def fix_seed(seed=0):
     random.seed(seed)

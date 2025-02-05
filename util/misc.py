@@ -2,7 +2,7 @@ from datetime import datetime
 
 
 def get_cur_time():
-    return datetime.today().strftime('%Y_%m_%d')
+    return datetime.today().strftime('%Y%m%d%H%M')
 
 def parse_original_question(question):
     return question.split('\n')[0]
