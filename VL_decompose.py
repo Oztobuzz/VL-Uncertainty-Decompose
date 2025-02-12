@@ -422,9 +422,9 @@ def save_log(log_dict, args, begin_time_str):
     elif(args.language_support == True):  
         option = 'language_support'
     else: option = 'original'
-    with open(f'exp_decompose/log_id{begin_time_str}_{option}_temp_{args.sampling_temp}.json', "w", encoding='utf-8') as f: 
+    with open(f'exp_decompose/log_id{begin_time_str}_{str(LVLM_MAP.get(args.lvlm))}_{option}_temp_{args.sampling_temp}.json', "w", encoding='utf-8') as f: 
         json.dump(log_dict, f, ensure_ascii=False, indent=4)
-    print(f"- Full log is saved at exp_decompose/log_id{begin_time_str}_{option}_temp_{args.sampling_temp}.json")
+    print(f"- Full log is saved at exp_decompose/log_id{begin_time_str}_{str(LVLM_MAP.get(args.lvlm))}_{option}_temp_{args.sampling_temp}.json")
 
 def fix_seed(seed=0):
     random.seed(seed)
